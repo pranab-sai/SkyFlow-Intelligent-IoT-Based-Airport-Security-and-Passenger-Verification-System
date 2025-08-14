@@ -1,0 +1,250 @@
+#include <Wire.h>
+#include <ESP8266WiFi.h>
+#include
+"ThingSpeak.h"
+#include <Adafruit_GFX.h>
+#include
+<Adafruit_SSD1306.h>
+#define SCREEN_WIDTH 128 // OLED display width, in
+pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+// Declaration for an
+SSD1306 display connected to I2C (SDA, SCL pins)
+Adafruit_SSD1306 display(SCREEN_WIDTH,
+SCREEN_HEIGHT, &Wire, -1);
+#define Buz 10
+#define metal A0
+#define ledr 14
+#define
+ledg 12
+int count = 0;
+char input[13];
+int i = 0, k = 0;
+const char* ssid =
+"project"; // your network SSID (name)
+const char* password =
+"123456789"; // your network password
+WiFiClient client;
+unsigned long
+myChannelNumber = 2974631;
+const char* myWriteAPIKey = "K0LT9EQBDRO3IQK1";
+void
+setup() {
+Serial.begin(9600);
+pinMode(Buz, OUTPUT);
+pinMode(ledr, OUTPUT);
+pinMode(ledg, OUTPUT);
+delay(200);
+if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { //
+Address 0x3D for 128x64
+Serial.println(F("SSD1306 allocation failed"));
+for
+(;;)
+;
+}
+delay(1000);
+display.clearDisplay();
+display.setTextSize(1);
+display.setTextColor(WHITE);
+display.setCursor(0, 0);
+display.println("Sky Flow :
+Intelligent IOT based Airport Operations Management");
+display.display();
+display.clearDisplay();
+display.clearDisplay();
+display.setCursor(0, 20); //
+Start at top-left corner
+display.setTextSize(1); // Normal 1:1 pixel scale
+display.setTextColor(WHITE, BLACK); display.println(("Attempt
+to connect"));
+display.display();
+delay(1000);
+// Draw white text
+display.clearDisplay();
+//
+Connect or reconnect to WiFi
+if (WiFi.status() != WL_CONNECTED) {
+Serial.println("Attempting to connect");
+delay(1000);
+while (WiFi.status()
+!= WL_CONNECTED) {
+WiFi.begin(ssid, password);
+delay(5000);
+}
+}
+display.setCursor(0, 30); display.println(("WiFi
+connected..!"));
+Serial.println("WiFi connected..!");
+display.display();
+delay(1000);
+display.setCursor(0, 40); display.setTextColor(WHITE, BLACK);
+display.println(("Got IP: "));
+display.println(WiFi.localIP());
+Serial.print("Got IP:");
+Serial.println(WiFi.localIP());
+display.display();
+delay(2000);
+// Start at top-left corner
+// Start at top-left corner
+WiFi.mode(WIFI_STA);
+ThingSpeak.begin(client);
+delay(2000);
+digitalWrite(Buz,
+LOW);
+}
+void loop() {
+unsigned int x, i1 = 0, cmp1 = 0, cmp2 = 0, cmp3 = 0, cmp4 = 0;
+char rec[13], card1[13] = "4500AA2A18DD", card2[13] = "4500AD7E1D8B",
+card3[13] = "4500ADACE8AC";
+cmp1 = cmp2 = cmp3 = 0;
+delay(1000);
+while (1)
+{
+display.clearDisplay();
+display.setCursor(0, 0);
+display.println("WAITING
+FOR CARD SWIP");
+display.display();
+delay(500);
+for (count = 0; count <
+12; count++) {
+while (!Serial.available())
+;
+input[count] =
+Serial.read();
+}
+input[12] = 0;
+display.setCursor(0, 10);
+display.println(input);
+display.display();
+Serial.print(input);
+delay(2000);
+int card = 0;
+if (strncmp(card1, input, 12) == 0) {
+card = 1;
+}
+if
+(strncmp(card2, input, 12) == 0) {
+card = 2;
+}
+if (strncmp(card3, input, 12)
+== 0) {
+card = 3;
+}
+display.setCursor(0, 20);
+display.print("card:
+");
+display.println((int)card);
+display.display();
+ThingSpeak.setField(1,
+card);
+delay(500);
+ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
+display.clearDisplay();
+if (card == 1) {
+digitalWrite(Buz, HIGH);
+digitalWrite(ledg, HIGH);
+display.setCursor(0, 0);
+display.println("XYZ
+PASSAGER");
+display.println("INDIAN CITIZEN");
+display.display();
+delay(1500);
+digitalWrite(ledg, LOW);
+digitalWrite(Buz,
+LOW);
+int metalState = analogRead(metal);
+display.setCursor(0, 40);
+display.print("Metal detector:");
+display.println(metalState);
+display.display();
+delay(2000);
+ThingSpeak.setField(2, metalState);
+ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
+delay(500);
+if
+(metalState <= 700) {
+digitalWrite(Buz, HIGH);
+digitalWrite(ledr, HIGH);
+display.setCursor(0, 50);
+display.println("Metal sensor is
+active");
+display.display();
+delay(2000);
+digitalWrite(Buz,
+LOW);
+digitalWrite(ledr, LOW);
+}
+cmp1 = 0;
+} else if (card == 2)
+{
+digitalWrite(Buz, HIGH);
+digitalWrite(ledg, HIGH);
+display.setCursor(0,
+0);
+display.println("ABC PASSAGER");
+display.println("INDIAN
+CITIZEN");
+display.display();
+delay(1500);
+digitalWrite(ledg, LOW);
+digitalWrite(Buz, LOW);
+delay(2000);
+int metalState = analogRead(metal);
+display.setCursor(0, 40);
+display.print("Metal detector:");
+display.println(metalState);
+display.display();
+delay(2000);
+ThingSpeak.setField(2, metalState);
+ThingSpeak.writeFields(myChannelNumber,
+myWriteAPIKey);
+delay(500);
+if (metalState <= 700) {
+digitalWrite(Buz, HIGH);
+digitalWrite(ledr, HIGH);
+display.setCursor(0,
+50);
+display.println("Metal sensor is active");
+display.display();
+delay(2000);
+digitalWrite(Buz, LOW);
+digitalWrite(ledr, LOW);
+}
+cmp2 = 0;
+} else if (card == 3) {
+digitalWrite(Buz, HIGH);
+digitalWrite(ledr, HIGH);
+display.setCursor(0, 0);
+display.println("UNAUTHORISED");
+display.println("PASSPORT
+EXPIRED");
+display.display();
+delay(500);
+digitalWrite(Buz, LOW);
+digitalWrite(ledr, LOW);
+int metalState = analogRead(metal);
+display.setCursor(0, 40);
+display.print("Metal detector:");
+display.println(metalState);
+display.display();
+delay(2000);
+ThingSpeak.setField(2, metalState);
+ThingSpeak.writeFields(myChannelNumber,
+myWriteAPIKey);
+delay(500);
+if (metalState <= 700) {
+digitalWrite(Buz, HIGH);
+digitalWrite(ledr, HIGH);
+display.setCursor(0,
+50);
+display.println("Metal sensor is active");
+display.display();
+delay(2000);
+digitalWrite(Buz, LOW);
+digitalWrite(ledr, LOW);
+}
+cmp3 = 0;
+}
+}
+}
